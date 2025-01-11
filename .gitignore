@@ -1,3 +1,4 @@
 .pio/
 .git-commit-hash
 .vscode/
+get-platformio.py

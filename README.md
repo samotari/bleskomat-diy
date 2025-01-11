@@ -357,6 +357,9 @@ platformio lib install LIBRARY_NAME[@VERSION]
 ```
 You can find PlatformIO's libraries repository [here](https://platformio.org/lib).
 
+2025-01-25 - Seems you need to add TFT_eSPI by running
+pio lib install bodmer/TFT_eSPI
+
 
 ## Configure Firmware Build Flags
 
