@@ -24,7 +24,7 @@ namespace {
 
 	void handleOverSizedLogFile() {
 		if (!spiffs::isInitialized()) return;
-		File file = SPIFFS.open(logFilePath, FILE_READ);
+		File file = LittleFS.open(logFilePath, FILE_READ);
 		if (file) {
 			const auto logFileSize = file.size();
 			file.close();
