@@ -1,16 +1,29 @@
 #include "screen/tft.h"
 
-namespace {
+// To generate PNG byte array, use this tool: https://notisrac.github.io/FileToCArray/
+#include "PNGdec.h"
+#include "screen/data/welcome0.h"
+#include "screen/data/welcome1.h"
+#include "screen/data/insertFiat.h"
+#include "screen/data/tradeComplete.h"
 
+namespace {
 	TFT_eSPI display = TFT_eSPI();
+
 	const auto bg_color = TFT_WHITE;
 	const auto text_color = TFT_BLACK;
 	const uint8_t text_font = 2;
+//	const uint8_t text_font = 4; //hobomat add 	-D LOAD_FONT4 to [tft_module] build_flags = 
 	const uint8_t text_size = 1;
 	const uint8_t margin_x = 4;
 	const uint8_t margin_y = 12;
+//	const uint8_t margin_y = 9; // hobomat
 	std::string current_screen = "";
 
+	PNG png; // PNG decoder instance
+	const int8_t MAX_IMAGE_WDITH = 240;
+	uint8_t current_welcome = 99;
+	
 	struct BoundingBox {
 		int16_t x = 0;
 		int16_t y = 0;
@@ -22,6 +35,12 @@ namespace {
 
 	std::string getAmountFiatCurrencyString(const float &amount) {
 		return util::floatToStringWithPrecision(amount, config::getUnsignedShort("fiatPrecision")) + " " + config::getString("fiatCurrency");
+	}
+
+	void pngDraw(PNGDRAW *pDraw) {
+		uint16_t lineBuffer[240];
+		png.getLineAsRGB565(pDraw, lineBuffer, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
+		display.pushImage(0, 0 + pDraw->y, pDraw->iWidth, 1, lineBuffer);
 	}
 
 	BoundingBox renderText(
@@ -121,6 +140,36 @@ namespace screen_tft {
 		clearScreen();
 	}
 
+	void showWelcomeScreen(uint8_t number) {
+		Serial.print("Show welcome screen "); Serial.println(number);
+		if (current_screen == "welcome" && current_welcome == number)
+		{
+			Serial.print("Skipping print");
+			return;
+		}
+
+		int16_t rc;
+		if (number == 0)
+		{
+			rc = png.openFLASH((uint8_t *)welcome0, sizeof(welcome0), pngDraw);
+		}
+		if (number == 1)
+		{
+			rc = png.openFLASH((uint8_t *)welcome1, sizeof(welcome1), pngDraw);
+		}
+		if (rc == PNG_SUCCESS) {
+			display.startWrite();
+			uint32_t dt = millis();
+			rc = png.decode(NULL, 0);
+			Serial.print(millis() - dt); Serial.println("ms");
+			display.endWrite();
+			png.close(); // not needed for memory->memory decode
+		}
+
+		current_screen = "welcome";
+		current_welcome = number;
+	}
+
 	void showInsertFiatScreen(const float &amount) {
 		if (current_screen == "insertFiat") {
 			// Clear previous text by drawing a rectangle over it.
@@ -131,10 +180,19 @@ namespace screen_tft {
 				amount_text_bbox.h,
 				bg_color
 			);
-		} else if (current_screen == "tradeComplete") {
+		} else {
 			// Clear the whole screen.
 			clearScreen();
+			int16_t rc = png.openFLASH((uint8_t *)insertFiat, sizeof(insertFiat), pngDraw);
+			if (rc == PNG_SUCCESS) {
+				display.startWrite();
+				uint32_t dt = millis();
+				rc = png.decode(NULL, 0);
+				display.endWrite();
+				png.close(); // not needed for memory->memory decode
+			}			
 		}
+
 		const std::string text = getAmountFiatCurrencyString(amount);
 		const int16_t center_x = display.width() / 2;
 		const int16_t text_x = center_x;
@@ -144,7 +202,15 @@ namespace screen_tft {
 	}
 
 	void showTradeCompleteScreen(const float &amount, const std::string &qrcodeData) {
-		clearScreen();
+		int16_t rc = png.openFLASH((uint8_t *)tradeComplete, sizeof(tradeComplete), pngDraw);
+		if (rc == PNG_SUCCESS)
+		{
+			display.startWrite();
+			uint32_t dt = millis();
+			rc = png.decode(NULL, 0);
+			display.endWrite();
+			png.close(); // not needed for memory->memory decode
+		}
 		const std::string text = getAmountFiatCurrencyString(amount);
 		const int16_t center_x = display.width() / 2;
 		const int16_t text_x = center_x;
@@ -152,6 +218,7 @@ namespace screen_tft {
 		amount_text_bbox = renderText(text, text_x, text_y, true/* center */);
 		const int16_t qr_x = center_x;
 		const int16_t qr_y = amount_text_bbox.y + amount_text_bbox.h + margin_y;
+//		const int16_t qr_y = amount_text_bbox.y + amount_text_bbox.h + margin_y / 2; // hobomat
 		const int16_t qr_max_w = display.width();
 		const int16_t qr_max_h = display.height() - (qr_y + margin_y);
 		renderQRCode(qrcodeData, qr_x, qr_y, qr_max_w, qr_max_h, true/* center */);

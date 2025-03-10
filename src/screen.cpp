@@ -2,6 +2,7 @@
 
 namespace {
 	std::string currentScreen = "";
+	uint8_t currentWelcomeScreen = 0;
 }
 
 namespace screen {
@@ -12,6 +13,16 @@ namespace screen {
 
 	std::string getCurrentScreen() {
 		return currentScreen;
+	}
+
+	void showWelcomeScreen(uint8_t number) {
+		screen_tft::showWelcomeScreen(number);
+		currentScreen = "welcome";
+		currentWelcomeScreen = number;
+	}
+
+	void showWelcomeScreenNext() {
+		showWelcomeScreen((currentWelcomeScreen + 1) % 2);
 	}
 
 	void showInsertFiatScreen(const float &amount) {

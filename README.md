@@ -357,6 +357,9 @@ platformio lib install LIBRARY_NAME[@VERSION]
 ```
 You can find PlatformIO's libraries repository [here](https://platformio.org/lib).
 
+2025-01-11 - Seems you need to add TFT_eSPI by running
+platformio lib install bodmer/TFT_eSPI
+
 
 ## Configure Firmware Build Flags
 
@@ -385,7 +388,7 @@ make monitor DEVICE=/dev/ttyUSB0
 ```
 Again the device path here could be different for your operating system.
 
-
+You can upload to device also by USB-Serial Web UI with Chrome https://platform.bleskomat.com/serial
 ## Configuring the Device
 
 It is possible to configure the device via the following methods:

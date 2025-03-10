@@ -131,7 +131,7 @@ namespace {
 				for (int num = 3; num >= 0; num--) {
 					const std::string logFilePath = logger::getLogFilePath(num);
 					if (spiffs::fileExists(logFilePath.c_str())) {
-						File file = SPIFFS.open(logFilePath.c_str(), FILE_READ);
+						File file = LittleFS.open(logFilePath.c_str(), FILE_READ);
 						if (file) {
 							while (file.available()) {
 								Serial.print(escapeLine(file.readStringUntil('\n').c_str()).c_str());
@@ -161,7 +161,7 @@ namespace {
 				Serial.println();
 			} else if (method == "spiffs_reformat") {
 				logger::write("Reformatting SPIFFS file system...");
-				if (!SPIFFS.format()) {
+				if (!LittleFS.format()) {
 					throw JsonRpcError("Failed to reformat SPIFFS file system");
 				}
 				logger::write("SPIFFS file system reformatted");

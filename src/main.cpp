@@ -43,6 +43,7 @@ void resetAccumulatedValues() {
 
 float amountShown = 0;
 unsigned long tradeCompleteTime = 0;
+bool buttonReleased = true;
 
 void writeTradeCompleteLog(const float &amount, const std::string &signedUrl) {
 	std::string msg = "Trade completed:\n";
@@ -56,21 +57,30 @@ void runAppLoop() {
 	billAcceptor::loop();
 	button::loop();
 	const std::string currentScreen = screen::getCurrentScreen();
-	if (currentScreen == "") {
-		screen::showInsertFiatScreen(0);
-	}
 	float accumulatedValue = 0;
 	accumulatedValue += coinAcceptor::getAccumulatedValue();
 	accumulatedValue += billAcceptor::getAccumulatedValue();
-	if (
+
+	if (currentScreen == "") {
+		disinhibitAcceptors();
+		screen::showWelcomeScreen(0);
+	} else if (
 		accumulatedValue > 0 &&
 		currentScreen != "insertFiat" &&
 		currentScreen != "tradeComplete"
 	) {
 		screen::showInsertFiatScreen(accumulatedValue);
 		amountShown = accumulatedValue;
-	}
-	if (currentScreen == "insertFiat") {
+	} else if (currentScreen == "welcome") {
+		disinhibitAcceptors();
+		if (button::isPressed() && buttonReleased) {
+			buttonReleased = false;
+			delay(100);
+			screen::showWelcomeScreenNext();
+		} else if (!button::isPressed()){
+			buttonReleased = true;
+		}
+	} else if (currentScreen == "insertFiat") {
 		disinhibitAcceptors();
 		if (button::isPressed()) {
 			if (accumulatedValue > 0) {
@@ -104,7 +114,10 @@ void runAppLoop() {
 			// Reset accumulated values.
 			resetAccumulatedValues();
 			amountShown = 0;
-			screen::showInsertFiatScreen(0);
+			disinhibitAcceptors();
+			screen::showWelcomeScreen(0);
+			buttonReleased = false;
+			delay(100);
 			logger::write("Screen cleared");
 		}
 	}

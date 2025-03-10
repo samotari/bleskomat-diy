@@ -6,7 +6,7 @@ namespace {
 
 	void printDirContents(const char* dirPath) {
 		std::cout << "Listing directory contents: " << dirPath << std::endl;
-		File root = SPIFFS.open(dirPath);
+		File root = LittleFS.open(dirPath);
 		if (!root) {
 			std::cout << "ERROR: Failed to open directory" << std::endl;
 			return;
@@ -30,13 +30,13 @@ namespace {
 namespace spiffs {
 
 	void init() {
-		if (!SPIFFS.begin()) {
+		if (!LittleFS.begin()) {
 			std::cout << "Failed to mount SPIFFS file system" << std::endl;
 			return;
 		}
 		initialized = true;
-		std::cout << "SPIFFS file system mounted: Used " << std::to_string(SPIFFS.usedBytes()) + " of ";
-		std::cout << std::to_string(SPIFFS.totalBytes()) + " available bytes." << std::endl;
+		std::cout << "SPIFFS file system mounted: Used " << std::to_string(LittleFS.usedBytes()) + " of ";
+		std::cout << std::to_string(LittleFS.totalBytes()) + " available bytes." << std::endl;
 		printDirContents("/");
 	}
 
@@ -46,12 +46,12 @@ namespace spiffs {
 
 	bool fileExists(const char* filePath) {
 		if (!initialized) return false;
-		return SPIFFS.exists(filePath);
+		return LittleFS.exists(filePath);
 	}
 
 	bool appendFile(const char* filePath, const char* data) {
 		if (!initialized) return false;
-		File file = SPIFFS.open(filePath, FILE_APPEND);
+		File file = LittleFS.open(filePath, FILE_APPEND);
 		if (!file) {
 			return false;
 		}
@@ -62,11 +62,11 @@ namespace spiffs {
 
 	bool renameFile(const char* filePath, const char* newFilePath) {
 		if (!initialized) return false;
-		return SPIFFS.rename(filePath, newFilePath);
+		return LittleFS.rename(filePath, newFilePath);
 	}
 
 	bool deleteFile(const char* filePath) {
 		if (!initialized) return false;
-		return SPIFFS.remove(filePath);
+		return LittleFS.remove(filePath);
 	}
 }
